@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from typing import List
 from datetime import date
 import models, schemas
 from database import get_db
@@ -71,29 +72,14 @@ def check_attendance_exists(employee_id: int, date: str, db: Session = Depends(g
     return {"exists": False}
 
 
-import logging
-
-logger = logging.getLogger("hrms_lite")
-
-
 @router.get("/{employee_id}", response_model=List[schemas.Attendance])
-def get_employee_attendance(
-    employee_id: int,
-    start_date: Optional[date] = None,
-    end_date: Optional[date] = None,
-    db: Session = Depends(get_db),
-):
-    logger.info(
-        f"Fetching attendance for emp {employee_id} with start_date={start_date}, end_date={end_date}"
+def get_employee_attendance(employee_id: int, db: Session = Depends(get_db)):
+    attendance_records = (
+        db.query(models.Attendance)
+        .filter(models.Attendance.employee_id == employee_id)
+        .all()
     )
-    query = db.query(models.Attendance).filter(
-        models.Attendance.employee_id == employee_id
-    )
-    if start_date:
-        query = query.filter(models.Attendance.date >= start_date)
-    if end_date:
-        query = query.filter(models.Attendance.date <= end_date)
-    return query.order_by(models.Attendance.date.desc()).all()
+    return attendance_records
 
 
 @router.get("/summary/today", response_model=schemas.DashboardSummary)
