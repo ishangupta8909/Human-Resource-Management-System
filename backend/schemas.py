@@ -36,6 +36,7 @@ class EmployeeCreate(EmployeeBase):
 
 class Employee(EmployeeBase):
     id: int
+    present_count: Optional[int] = 0
     attendance_records: List[Attendance] = []
 
     class Config:
@@ -46,3 +47,4 @@ class DashboardSummary(BaseModel):
     total_employees: int
     total_present_today: int
     total_absent_today: int
+    recent_activity: List[Attendance] = []

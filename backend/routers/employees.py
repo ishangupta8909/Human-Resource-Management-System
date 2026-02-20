@@ -37,9 +37,24 @@ def create_employee(employee: schemas.EmployeeCreate, db: Session = Depends(get_
     return db_employee
 
 
+from sqlalchemy import func
+
+
 @router.get("/", response_model=List[schemas.Employee])
 def read_employees(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     employees = db.query(models.Employee).offset(skip).limit(limit).all()
+
+    # Add present_count to each employee
+    for emp in employees:
+        emp.present_count = (
+            db.query(models.Attendance)
+            .filter(
+                models.Attendance.employee_id == emp.id,
+                models.Attendance.status == models.AttendanceStatus.PRESENT,
+            )
+            .count()
+        )
+
     return employees
 
 
@@ -53,7 +68,9 @@ def delete_employee(employee_id: int, db: Session = Depends(get_db)):
     # Perform delete inside explicit commit/rollback to avoid "transaction already begun" errors
     try:
         # delete attendance rows explicitly (relationship has cascade, but be explicit)
-        db.query(models.Attendance).filter(models.Attendance.employee_id == employee_id).delete(synchronize_session=False)
+        db.query(models.Attendance).filter(
+            models.Attendance.employee_id == employee_id
+        ).delete(synchronize_session=False)
         db.delete(db_employee)
         db.commit()
     except Exception as exc:

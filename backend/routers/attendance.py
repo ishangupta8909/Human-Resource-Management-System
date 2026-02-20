@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from typing import List
-from datetime import date
+from typing import List, Optional
+from datetime import date, datetime
 import models, schemas
 from database import get_db
 
@@ -73,13 +73,20 @@ def check_attendance_exists(employee_id: int, date: str, db: Session = Depends(g
 
 
 @router.get("/{employee_id}", response_model=List[schemas.Attendance])
-def get_employee_attendance(employee_id: int, db: Session = Depends(get_db)):
-    attendance_records = (
-        db.query(models.Attendance)
-        .filter(models.Attendance.employee_id == employee_id)
-        .all()
+def get_employee_attendance(
+    employee_id: int,
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
+    db: Session = Depends(get_db),
+):
+    query = db.query(models.Attendance).filter(
+        models.Attendance.employee_id == employee_id
     )
-    return attendance_records
+    if start_date:
+        query = query.filter(models.Attendance.date >= start_date)
+    if end_date:
+        query = query.filter(models.Attendance.date <= end_date)
+    return query.order_by(models.Attendance.date.desc()).all()
 
 
 @router.get("/summary/today", response_model=schemas.DashboardSummary)
@@ -103,8 +110,14 @@ def get_today_summary(db: Session = Depends(get_db)):
         .count()
     )
 
+    # Recent activity (last 5 records)
+    recent_activity = (
+        db.query(models.Attendance).order_by(models.Attendance.id.desc()).limit(5).all()
+    )
+
     return {
         "total_employees": total_employees,
         "total_present_today": present_today,
         "total_absent_today": absent_today,
+        "recent_activity": recent_activity,
     }

@@ -10,6 +10,7 @@ const Attendance = () => {
     const [attendanceRecords, setAttendanceRecords] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+    const [dateRange, setDateRange] = useState({ start: '', end: '' });
     const [toast, setToast] = useState(null);
     const [confirm, setConfirm] = useState({ visible: false, empId: null, fromStatus: null, toStatus: null, message: '' });
 
@@ -28,13 +29,25 @@ const Attendance = () => {
         }
     };
 
-    const handleViewAttendance = async (emp) => {
+    const handleViewAttendance = async (emp, filters = {}) => {
         setSelectedEmployee(emp);
         try {
-            const res = await attendanceService.getForEmployee(emp.id);
+            const params = {};
+            if (filters.start) params.start_date = filters.start;
+            if (filters.end) params.end_date = filters.end;
+
+            const res = await attendanceService.getForEmployee(emp.id, params);
             setAttendanceRecords(res.data);
         } catch (err) {
             console.error(err);
+        }
+    };
+
+    const handleFilterChange = (field, value) => {
+        const newRange = { ...dateRange, [field]: value };
+        setDateRange(newRange);
+        if (selectedEmployee) {
+            handleViewAttendance(selectedEmployee, newRange);
         }
     };
 
@@ -158,12 +171,18 @@ const Attendance = () => {
 
             <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '2.5rem' }}>
                 <Card title="Operational Roster">
-                    <Table headers={['Professional', 'Operations']}>
+                    <Table headers={['Professional', 'Metrics', 'Operations']}>
                         {employees.map(emp => (
                             <tr key={emp.id} style={{ transition: 'all 0.2s ease' }} className="table-row-hover">
                                 <td style={{ padding: '1.25rem 1.5rem' }}>
                                     <div style={{ fontWeight: 600 }}>{emp.full_name}</div>
                                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{emp.department}</div>
+                                </td>
+                                <td style={{ padding: '1.25rem 1.5rem' }}>
+                                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Present Days</span>
+                                        <span style={{ fontWeight: 700, color: 'var(--primary)' }}>{emp.present_count || 0}</span>
+                                    </div>
                                 </td>
                                 <td style={{ padding: '1.25rem 1.5rem', display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
                                     <Button variant="outline" style={{ borderColor: 'rgba(16, 185, 129, 0.3)', color: '#10b981', padding: '0.5rem 1rem', fontSize: '0.85rem' }} onClick={() => handleMarkAttendance(emp.id, 'Present')}>Check In</Button>
@@ -177,7 +196,30 @@ const Attendance = () => {
 
                 <Card title={selectedEmployee ? `Employee: ${selectedEmployee.full_name}` : 'Employee Access'}>
                     {selectedEmployee ? (
-                        <Calendar records={attendanceRecords} />
+                        <>
+                            <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', alignItems: 'center' }}>
+                                <div style={{ flex: 1 }}>
+                                    <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>Start Date</label>
+                                    <input
+                                        type="date"
+                                        value={dateRange.start}
+                                        onChange={(e) => handleFilterChange('start', e.target.value)}
+                                        style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', color: 'white', padding: '0.5rem', borderRadius: '8px' }}
+                                    />
+                                </div>
+                                <div style={{ flex: 1 }}>
+                                    <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>End Date</label>
+                                    <input
+                                        type="date"
+                                        value={dateRange.end}
+                                        onChange={(e) => handleFilterChange('end', e.target.value)}
+                                        style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', color: 'white', padding: '0.5rem', borderRadius: '8px' }}
+                                    />
+                                </div>
+                                <Button variant="outline" style={{ marginTop: '1.25rem' }} onClick={() => { setDateRange({ start: '', end: '' }); handleViewAttendance(selectedEmployee, { start: '', end: '' }); }}>Clear</Button>
+                            </div>
+                            <Calendar records={attendanceRecords} />
+                        </>
                     ) : (
                         <div style={{ padding: '6rem 2rem', textAlign: 'center', color: 'var(--text-muted)', border: '2px dashed var(--glass-border)', borderRadius: '24px' }}>
                             Select a employee to view their attendance records.
