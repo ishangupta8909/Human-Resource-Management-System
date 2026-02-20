@@ -10,7 +10,6 @@ const Attendance = () => {
     const [attendanceRecords, setAttendanceRecords] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
-    const [dateRange, setDateRange] = useState({ start: '', end: '' });
     const [toast, setToast] = useState(null);
     const [confirm, setConfirm] = useState({ visible: false, empId: null, fromStatus: null, toStatus: null, message: '' });
 
@@ -29,26 +28,13 @@ const Attendance = () => {
         }
     };
 
-    const handleViewAttendance = async (emp, filters = null) => {
+    const handleViewAttendance = async (emp) => {
         setSelectedEmployee(emp);
-        const searchFilters = filters || dateRange;
         try {
-            const params = {};
-            if (searchFilters.start) params.start_date = searchFilters.start;
-            if (searchFilters.end) params.end_date = searchFilters.end;
-
-            const res = await attendanceService.getForEmployee(emp.id, params);
+            const res = await attendanceService.getForEmployee(emp.id);
             setAttendanceRecords(res.data);
         } catch (err) {
             console.error(err);
-        }
-    };
-
-    const handleFilterChange = (field, value) => {
-        const newRange = { ...dateRange, [field]: value };
-        setDateRange(newRange);
-        if (selectedEmployee) {
-            handleViewAttendance(selectedEmployee, newRange);
         }
     };
 
@@ -197,30 +183,7 @@ const Attendance = () => {
 
                 <Card title={selectedEmployee ? `Employee: ${selectedEmployee.full_name}` : 'Employee Access'}>
                     {selectedEmployee ? (
-                        <>
-                            <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', alignItems: 'center' }}>
-                                <div style={{ flex: 1 }}>
-                                    <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>Start Date</label>
-                                    <input
-                                        type="date"
-                                        value={dateRange.start}
-                                        onChange={(e) => handleFilterChange('start', e.target.value)}
-                                        style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', color: 'white', padding: '0.5rem', borderRadius: '8px' }}
-                                    />
-                                </div>
-                                <div style={{ flex: 1 }}>
-                                    <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>End Date</label>
-                                    <input
-                                        type="date"
-                                        value={dateRange.end}
-                                        onChange={(e) => handleFilterChange('end', e.target.value)}
-                                        style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', color: 'white', padding: '0.5rem', borderRadius: '8px' }}
-                                    />
-                                </div>
-                                <Button variant="outline" style={{ marginTop: '1.25rem' }} onClick={() => { setDateRange({ start: '', end: '' }); handleViewAttendance(selectedEmployee, { start: '', end: '' }); }}>Clear</Button>
-                            </div>
-                            <Calendar records={attendanceRecords} viewDate={dateRange.start} />
-                        </>
+                        <Calendar records={attendanceRecords} />
                     ) : (
                         <div style={{ padding: '6rem 2rem', textAlign: 'center', color: 'var(--text-muted)', border: '2px dashed var(--glass-border)', borderRadius: '24px' }}>
                             Select a employee to view their attendance records.

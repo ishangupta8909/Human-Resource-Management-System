@@ -15,7 +15,7 @@ export const employeeService = {
 
 export const attendanceService = {
   mark: (employeeId, data) => api.post(`/attendance/${employeeId}`, data),
-  getForEmployee: (employeeId, params = {}) => api.get(`/attendance/${employeeId}`, { params }),
+  getForEmployee: (employeeId) => api.get(`/attendance/${employeeId}`),
   getTodaySummary: () => api.get('/attendance/summary/today'),
   checkExists: (employeeId, date) => api.get(`/attendance/check/${employeeId}/${date}`),
 };
