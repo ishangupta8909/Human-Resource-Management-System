@@ -72,6 +72,11 @@ def check_attendance_exists(employee_id: int, date: str, db: Session = Depends(g
     return {"exists": False}
 
 
+import logging
+
+logger = logging.getLogger("hrms_lite")
+
+
 @router.get("/{employee_id}", response_model=List[schemas.Attendance])
 def get_employee_attendance(
     employee_id: int,
@@ -79,6 +84,9 @@ def get_employee_attendance(
     end_date: Optional[date] = None,
     db: Session = Depends(get_db),
 ):
+    logger.info(
+        f"Fetching attendance for emp {employee_id} with start_date={start_date}, end_date={end_date}"
+    )
     query = db.query(models.Attendance).filter(
         models.Attendance.employee_id == employee_id
     )

@@ -29,12 +29,13 @@ const Attendance = () => {
         }
     };
 
-    const handleViewAttendance = async (emp, filters = {}) => {
+    const handleViewAttendance = async (emp, filters = null) => {
         setSelectedEmployee(emp);
+        const searchFilters = filters || dateRange;
         try {
             const params = {};
-            if (filters.start) params.start_date = filters.start;
-            if (filters.end) params.end_date = filters.end;
+            if (searchFilters.start) params.start_date = searchFilters.start;
+            if (searchFilters.end) params.end_date = searchFilters.end;
 
             const res = await attendanceService.getForEmployee(emp.id, params);
             setAttendanceRecords(res.data);
@@ -218,7 +219,7 @@ const Attendance = () => {
                                 </div>
                                 <Button variant="outline" style={{ marginTop: '1.25rem' }} onClick={() => { setDateRange({ start: '', end: '' }); handleViewAttendance(selectedEmployee, { start: '', end: '' }); }}>Clear</Button>
                             </div>
-                            <Calendar records={attendanceRecords} />
+                            <Calendar records={attendanceRecords} viewDate={dateRange.start} />
                         </>
                     ) : (
                         <div style={{ padding: '6rem 2rem', textAlign: 'center', color: 'var(--text-muted)', border: '2px dashed var(--glass-border)', borderRadius: '24px' }}>

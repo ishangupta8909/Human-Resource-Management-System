@@ -1,7 +1,14 @@
 import React, { useState } from 'react';
 
-const Calendar = ({ records }) => {
+const Calendar = ({ records, viewDate }) => {
     const [currentDate, setCurrentDate] = useState(new Date());
+
+    React.useEffect(() => {
+        if (viewDate && /^\d{4}-\d{2}-\d{2}$/.test(viewDate)) {
+            const [y, m, d] = viewDate.split('-').map(Number);
+            setCurrentDate(new Date(y, m - 1, d));
+        }
+    }, [viewDate]);
 
     const daysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
     const firstDayOfMonth = (year, month) => new Date(year, month, 1).getDay();
