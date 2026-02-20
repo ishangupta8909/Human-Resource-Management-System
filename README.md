@@ -7,6 +7,8 @@ A lightweight Human Resource Management System (HRMS) designed for simplicity an
 - **Frontend**: https://human-resource-management-system-eight.vercel.app
 - **Backend**: https://human-resource-management-system-7ha9.onrender.com
 
+**If frontend is blank, please make sure backend is active by clicking the link above**
+
 
 
 ## Features
